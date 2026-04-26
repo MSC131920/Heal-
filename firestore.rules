@@ -1,0 +1,67 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // User Profiles
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(userId) && request.resource.data.role == 'patient';
+      allow update: if isOwner(userId) && request.resource.data.role == resource.data.role; // Prevent role escalation
+      allow write: if isAdmin();
+    }
+
+    // Doctors (Public Read, Admin Write)
+    match /doctors/{doctorId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Departments (Public Read, Admin Write)
+    match /departments/{departmentId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Appointments
+    match /appointments/{appointmentId} {
+      allow read: if isSignedIn() && (request.auth.uid == resource.data.patientId || isAdmin());
+      allow create: if isSignedIn() && request.resource.data.patientId == request.auth.uid;
+      allow update: if isSignedIn() && (request.auth.uid == resource.data.patientId || isAdmin());
+      allow delete: if isAdmin();
+      
+      // Specifically for list queries
+      allow list: if isSignedIn() && (resource.data.patientId == request.auth.uid || isAdmin());
+    }
+
+    // Reports
+    match /reports/{reportId} {
+      allow read: if isSignedIn() && (request.auth.uid == resource.data.patientId || isAdmin());
+      allow create: if isSignedIn() && request.resource.data.patientId == request.auth.uid;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+
+      allow list: if isSignedIn() && (resource.data.patientId == request.auth.uid || isAdmin());
+    }
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Application users (patients and admins)",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["patient", "admin"] },
+        "phone": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "role", "createdAt"]
+    },
+    "Doctor": {
+      "title": "Doctor",
+      "description": "Medical professionals available for appointments",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "department": { "type": "string" },
+        "specialty": { "type": "string" },
+        "bio": { "type": "string" },
+        "image": { "type": "string" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["name", "department", "active"]
+    },
+    "Appointment": {
+      "title": "Appointment",
+      "description": "Booked medical consultations",
+      "type": "object",
+      "properties": {
+        "patientId": { "type": "string" },
+        "doctorId": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "time": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "completed", "cancelled"] },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["patientId", "doctorId", "date", "time", "status", "createdAt"]
+    },
+    "Department": {
+      "title": "Department",
+      "description": "Hospital departments or wings",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "iconName": { "type": "string" }
+      },
+      "required": ["name"]
+    },
+    "Report": {
+      "title": "Report",
+      "description": "Patient medical reports",
+      "type": "object",
+      "properties": {
+        "patientId": { "type": "string" },
+        "name": { "type": "string" },
+        "fileUrl": { "type": "string" },
+        "uploadDate": { "type": "string", "format": "date-time" }
+      },
+      "required": ["patientId", "name", "uploadDate"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "doctors/{doctorId}": {
+      "schema": "Doctor",
+      "description": "Doctor directory"
+    },
+    "appointments/{appointmentId}": {
+      "schema": "Appointment",
+      "description": "Appointment records"
+    },
+    "departments/{departmentId}": {
+      "schema": "Department",
+      "description": "Hospital departments"
+    },
+    "reports/{reportId}": {
+      "schema": "Report",
+      "description": "Medical reports"
+    }
+  }
+}
